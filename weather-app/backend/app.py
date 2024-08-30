@@ -1,28 +1,34 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask_cors import CORS
 import requests
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
+CORS(app)
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/get_weather', methods=['POST'])
+@app.route('/get_weather', methods=['GET'])
 def get_weather():
-    city = request.form.get('city')
-    api_key = 'your_openweathermap_api_key'
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    city = request.args.get('city')
+    if not city:
+        return jsonify({'error': 'City is required'}), 400
+    
+    api_key = '30528d9d4f60434ab03175129240105'
+    url = f"http://api.weatherapi.com/v1/current.json?key={api_key}&q={city}"
+    
     response = requests.get(url)
     weather_data = response.json()
 
-    if weather_data.get('cod') != 200:
+    if 'error' in weather_data:
         return jsonify({'error': 'City not found'}), 404
-
+    
     return jsonify({
-        'city': weather_data['name'],
-        'temperature': weather_data['main']['temp'],
-        'description': weather_data['weather'][0]['description'],
-        'icon': weather_data['weather'][0]['icon'],
+        'city': weather_data['location']['name'],
+        'temperature': weather_data['current']['temp_c'],
+        'description': weather_data['current']['condition']['text'],
+        'icon': weather_data['current']['condition']['icon'],
     })
 
 if __name__ == '__main__':
