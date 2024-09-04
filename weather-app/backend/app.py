@@ -28,7 +28,6 @@ def get_weather():
         'city': weather_data['location']['name'],
         'temperature': weather_data['current']['temp_c'],
         'description': weather_data['current']['condition']['text'],
-        'icon': weather_data['current']['condition']['icon'],
     })
 
 if __name__ == '__main__':
